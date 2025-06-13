@@ -4,7 +4,8 @@ import cors from "cors";
 import connectDB from "./configs/database.js";
 import config from "./configs/config.js";
 
-import bookingRouter from "./routes/bookings.route.js"
+import bookingRoute from "./routes/bookings.route.js";
+import vehicleRoute from "./routes/vehicles.route.js";
 
 dotenv.config();
 
@@ -31,7 +32,8 @@ app.get("/", (req, res) => {
 });
 
 // ap.use() api routes
-app.use("/api/bookings", bookingRouter);
+app.use("/api/bookings", bookingRoute);
+app.use("/api/vehicles", vehicleRoute);
 
 // Error handling middleware (optional, but good practice)
 app.use((err, req, res, next) => {
