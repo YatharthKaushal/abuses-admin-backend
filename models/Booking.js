@@ -44,76 +44,76 @@ const bookingSchema = new mongoose.Schema(
     bookingNumber: {
       type: String,
       unique: true,
-      required: true,
+      // required: true,
     },
     customer: {
       consumerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true,
+        // required: true,
       },
       name: {
         type: String,
-        required: true,
+        // required: true,
       },
       phone: {
         type: String,
-        required: true,
+        // required: true,
       },
       email: {
         type: String,
-        required: true,
+        // required: true,
       },
     },
     vehicle: {
       vehicleId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Vehicle",
-        required: true,
+        // required: true,
       },
       type: {
         type: String,
-        required: true,
+        // required: true,
       },
       number: {
         type: String,
-        required: true,
+        // required: true,
       },
       driver: {
         type: String,
-        required: true,
+        // required: true,
       },
     },
     trip: {
       from: {
         type: String,
-        required: true,
+        // required: true,
       },
       to: {
         type: String,
-        required: true,
+        // required: true,
       },
       startDate: {
         type: Date,
-        required: true,
+        // required: true,
       },
       endDate: {
         type: Date,
-        required: true,
+        // required: true,
       },
       totalDays: {
         type: Number,
-        required: true,
+        // required: true,
       },
       purpose: {
         type: String,
-        required: true,
+        // required: true,
       },
     },
     payment: {
       total: {
         type: Number,
-        required: true,
+        // required: true,
       },
       advance: {
         type: Number,
@@ -143,11 +143,11 @@ const bookingSchema = new mongoose.Schema(
       {
         action: {
           type: String,
-          required: true,
+          // required: true,
         },
         user: {
           type: String,
-          required: true,
+          // required: true,
         },
         time: {
           type: Date,
