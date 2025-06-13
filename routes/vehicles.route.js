@@ -3,7 +3,7 @@ import {
   createVehicle,
   getVehicleById,
   getVehicleByNumber,
-  getAllVehles,
+  getAllVehicles,
   updateVehicle,
   deleteVehicle,
   getComplianceNearingExpiry,
@@ -49,7 +49,7 @@ router.get("/number/:number", getVehicleByNumber);
  * @desc    Create a new vehicle
  * @access  Private/Admin
  */
-router.route("/").get(getAllVehles).post(createVehicle);
+router.route("/").get(getAllVehicles).post(createVehicle);
 
 /**
  * @route   PUT /api/vehicles/:identifier
