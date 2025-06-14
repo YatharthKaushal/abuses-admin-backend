@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Booking from "../models/Booking.js"; // Assuming the schema file is in models/Booking.js
 import User from "../models/User.js"; // Assuming User model exists
 import { v4 as uuidv4 } from "uuid";
+import Consumer from "../models/Consumer.js";
 
 // Create a new booking
 export const createBooking = async (req, res) => {
@@ -9,35 +10,35 @@ export const createBooking = async (req, res) => {
     const { customer, vehicle, trip, payment } = req.body;
 
     // Validate required fields
-    if (
-      !customer ||
-      !customer.name ||
-      !customer.phone ||
-      !customer.email ||
-      !vehicle ||
-      !vehicle.vehicleId ||
-      !vehicle.type ||
-      !vehicle.number ||
-      !vehicle.driver ||
-      !trip ||
-      !trip.from ||
-      !trip.to ||
-      !trip.startDate ||
-      !trip.endDate ||
-      !trip.totalDays ||
-      !trip.purpose ||
-      !payment ||
-      !payment.total
-    ) {
-      return res
-        .status(400)
-        .json({ message: "All required fields must be provided" });
-    }
+    // if (
+    //   !customer ||
+    //   !customer.name ||
+    //   !customer.phone ||
+    //   !customer.email ||
+    //   !vehicle ||
+    //   !vehicle.vehicleId ||
+    //   !vehicle.type ||
+    //   !vehicle.number ||
+    //   !vehicle.driver ||
+    //   !trip ||
+    //   !trip.from ||
+    //   !trip.to ||
+    //   !trip.startDate ||
+    //   !trip.endDate ||
+    //   !trip.totalDays ||
+    //   !trip.purpose ||
+    //   !payment ||
+    //   !payment.total
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "All required fields must be provided" });
+    // }
 
     // Check if user exists or create new user
-    let user = await User.findOne({ phone: customer.phone });
-    if (!user) {
-      user = await User.create({
+    let consumer = await Consumer.findOne({ phone: customer.phone });
+    if (!consumer) {
+      consumer = await Consumer.create({
         name: customer.name,
         email: customer.email,
         phone: customer.phone,
@@ -51,7 +52,7 @@ export const createBooking = async (req, res) => {
     const newBooking = new Booking({
       bookingNumber,
       customer: {
-        consumerId: user._id,
+        consumerId: consumer._id,
         name: customer.name,
         phone: customer.phone,
         email: customer.email,
@@ -63,7 +64,7 @@ export const createBooking = async (req, res) => {
       timeline: [
         {
           action: "Booking created",
-          user: user.name,
+          consumer: consumer.name,
           time: new Date(),
         },
       ],
@@ -127,7 +128,7 @@ export const updateBookingStatus = async (req, res) => {
     booking.status = status;
     booking.timeline.push({
       action: `Status updated to ${status}`,
-      user: req.user?.name || "System", // Assuming user info is available in req.user
+      consumer: req.consumer?.name || "System", // Assuming user info is available in req.user
       time: new Date(),
     });
 
@@ -156,6 +157,65 @@ export const getAllBookings = async (req, res) => {
     return res.status(200).json(bookings);
   } catch (error) {
     console.error("Error fetching bookings:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+// Update an existing booking
+export const updateBooking = async (req, res) => {
+  try {
+    const { customer, vehicle, trip, payment } = req.body;
+    const bookingId = req.params.id;
+
+    // Validate booking exists
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Update consumer if necessary
+    let consumer = await Consumer.findOne({ phone: customer.phone });
+    if (!consumer) {
+      consumer = await Consumer.create({
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+      });
+    }
+
+    // Update booking fields
+    booking.customer = {
+      consumerId: consumer._id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      address: customer.address,
+    };
+    booking.vehicle = vehicle;
+    booking.trip = trip;
+    booking.payment = payment;
+    booking.timeline.push({
+      action: "Booking updated",
+      user: consumer.name || "System",
+      time: new Date(),
+    });
+
+    // Save updated booking
+    const updatedBooking = await booking.save();
+
+    // Populate references
+    const populatedBooking = await Booking.findById(updatedBooking._id)
+      .populate("customer.consumerId", "name email")
+      .populate("vehicle.vehicleId", "type number");
+
+    return res.status(200).json({
+      message: "Booking updated successfully",
+      booking: populatedBooking,
+    });
+  } catch (error) {
+    console.error("Error updating booking:", error);
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });

@@ -9,10 +9,12 @@ import mongoose from "mongoose";
  * @param {object} res - Express response object
  */
 export const createVehicle = async (req, res) => {
+  console.log("> reached:", req.body);
   try {
     // Check if a vehicle with the same number already exists
     const existingVehicle = await Vehicle.findOne({ number: req.body.number });
     if (existingVehicle) {
+      // console.log("> A vehicle with this number already exists.");
       return res
         .status(400)
         .json({ message: "A vehicle with this number already exists." });
@@ -22,9 +24,98 @@ export const createVehicle = async (req, res) => {
     const newVehicle = await vehicle.save();
     res.status(201).json(newVehicle);
   } catch (error) {
+    // console.log("> Error creating vehicle", error.message);
     res
       .status(400)
       .json({ message: "Error creating vehicle", error: error.message });
+  }
+};
+
+/**
+ * @description Create multiple new vehicles from an array
+ * @route POST /api/vehicles/many
+ * @access Private/Admin
+ * @param {object} req - Express request object with a body containing an array of vehicles
+ * @param {object} res - Express response object
+ */
+export const createManyVehicles = async (req, res) => {
+  try {
+    const vehiclesData = req.body;
+
+    // 1. Validate input: Ensure the body is a non-empty array
+    if (!Array.isArray(vehiclesData) || vehiclesData.length === 0) {
+      return res
+        .status(400)
+        .json({
+          message: "Request body must be a non-empty array of vehicle objects.",
+        });
+    }
+
+    // 2. Extract all incoming vehicle numbers for an efficient DB check
+    const incomingNumbers = vehiclesData.map((v) => v.number);
+
+    // 3. Find all vehicles that already exist with any of the incoming numbers
+    const existingVehicles = await Vehicle.find({
+      number: { $in: incomingNumbers },
+    });
+    const existingNumbersSet = new Set(existingVehicles.map((v) => v.number));
+
+    // 4. Separate new vehicles from ones that are duplicates (either in DB or in the request itself)
+    const newVehiclesToCreate = [];
+    const skippedVehicles = [];
+    const processedNumbers = new Set(); // Tracks numbers within the incoming array to avoid duplicates
+
+    for (const vehicle of vehiclesData) {
+      if (!vehicle.number) {
+        skippedVehicles.push({
+          data: vehicle,
+          reason: "Missing vehicle number.",
+        });
+        continue;
+      }
+
+      if (existingNumbersSet.has(vehicle.number)) {
+        skippedVehicles.push({
+          number: vehicle.number,
+          reason: "A vehicle with this number already exists in the database.",
+        });
+      } else if (processedNumbers.has(vehicle.number)) {
+        skippedVehicles.push({
+          number: vehicle.number,
+          reason: "Duplicate vehicle number found within the request list.",
+        });
+      } else {
+        newVehiclesToCreate.push(vehicle);
+        processedNumbers.add(vehicle.number);
+      }
+    }
+
+    // 5. If there are no new vehicles to add, return a summary
+    if (newVehiclesToCreate.length === 0) {
+      return res.status(200).json({
+        message: "No new vehicles were created.",
+        createdCount: 0,
+        skippedCount: skippedVehicles.length,
+        skippedVehicles: skippedVehicles,
+      });
+    }
+
+    // 6. Insert all new vehicles in a single, efficient database operation
+    const createdVehicles = await Vehicle.insertMany(newVehiclesToCreate);
+
+    // 7. Respond with a detailed summary of the operation
+    res.status(201).json({
+      message: `Operation complete. Successfully created ${createdVehicles.length} vehicles.`,
+      createdCount: createdVehicles.length,
+      skippedCount: skippedVehicles.length,
+      createdVehicles,
+      skippedVehicles,
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: "An error occurred while creating vehicles.",
+      error: error.message,
+    });
   }
 };
 
@@ -103,8 +194,8 @@ export const getAllVehicles = async (req, res) => {
     if (ownership) query.ownership = ownership;
 
     const vehicles = await Vehicle.find(query)
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      // .limit(limit * 1)
+      // .skip((page - 1) * limit)
       .populate("vendor.vendorId")
       .exec();
 

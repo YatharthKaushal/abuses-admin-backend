@@ -115,10 +115,10 @@ const vehicleSchema = new mongoose.Schema(
     },
     ownership: {
       type: String,
-      enum: ["own", "vendor", "leased"],
+      enum: ["own", "vendor", "leased", "owned"],
       default: "own",
     },
-    vendorId: {
+    vendor: {
       vendorId: { type: mongoose.Schema.Types.ObjectId, ref: "Vendor" },
       rate: { type: Number },
       notes: { type: String },

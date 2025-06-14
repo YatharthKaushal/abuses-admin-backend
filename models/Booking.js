@@ -67,8 +67,9 @@ const bookingSchema = new mongoose.Schema(
     },
     vehicle: {
       vehicleId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Vehicle",
+        type: String,
+        // type: mongoose.Schema.Types.ObjectId,
+        // ref: "Vehicle",
         // required: true,
       },
       type: {

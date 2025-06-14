@@ -4,7 +4,8 @@ import {
   getBooking,
   updateBookingStatus,
   getAllBookings,
-} from "../controllers/bookings.controller.js"; // Assuming controller is in controllers/bookingController.js
+  updateBooking,
+} from "../controllers/bookings.controller.js";
 
 const router = express.Router();
 
@@ -16,6 +17,9 @@ router.get("/:id", getBooking);
 
 // Update booking status
 router.patch("/:id/status", updateBookingStatus);
+
+// Update an existing booking
+router.patch("/:id", updateBooking);
 
 // Get all bookings
 router.get("/", getAllBookings);

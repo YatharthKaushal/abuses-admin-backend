@@ -8,6 +8,7 @@ import {
   deleteVehicle,
   getComplianceNearingExpiry,
   getFleetStats,
+  createManyVehicles,
 } from "../controllers/vehicles.controller.js";
 
 const router = express.Router();
@@ -50,6 +51,7 @@ router.get("/number/:number", getVehicleByNumber);
  * @access  Private/Admin
  */
 router.route("/").get(getAllVehicles).post(createVehicle);
+router.route("/many").post(createManyVehicles);
 
 /**
  * @route   PUT /api/vehicles/:identifier
